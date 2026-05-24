@@ -155,25 +155,23 @@ int index = (table.length - 1) & hash;
 Node<K,V> first = table[index];
 
 if (first == null) {
-        return null;
-        }
+    return null;
+}
 
 // 永远检查第一个节点
-        if (first.hash == hash &&
-        (first.key == key || key.equals(first.key))) {
-        return first.value;
+if (first.hash == hash &&(first.key == key || key.equals(first.key))) {
+    return first.value;
 }
 // 遍历，寻找key和hash都相等的结果
 Node<K,V> node = first.next;
 while (node != null) {
-        if (node.hash == hash &&
-        (node.key == key || key.equals(node.key))) {
+    if (node.hash == hash && (node.key == key || key.equals(node.key))) {
         return node.value;
     }
-node = node.next;
+    node = node.next;
 }
 
-        return null;
+    return null;
 ```
 
 ## 6.扩容resize()机制
@@ -227,71 +225,73 @@ final Node<K,V>[] resize() {
 ```java
 
 // 根据前面计算出来的容量大小，创建数组
-Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
-// 更新引用
-table = newTab;
-if (oldTab != null) {
+final Node<K,V>[] resize() {
+    Node<K, V>[] newTab = (Node<K, V>[]) new Node[newCap];
+     // 更新引用
+    table = newTab;
+    if (oldTab != null) {
         // 遍历每个元素
         for (int j = 0; j < oldCap; ++j) {
-Node<K,V> e;
-// 如果元素不为空
-        if ((e = oldTab[j]) != null) {
-// 清空旧数组当前位置的引用，帮助 GC 回收旧数组中的节点引用关系
-oldTab[j] = null;
-        // 如果没有下一个节点，说明就一个元素，直接放入新数组
-        if (e.next == null)
-// 计算当前元素在新数组的位置
-newTab[e.hash & (newCap - 1)] = e;
-// next不为空，判断是否为树，走树的迁移方式
-// 树节点也会按高低位拆分，只是 TreeNode.split 内部还会处理树化/退化逻辑
-            else if (e instanceof TreeNode)
-        ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
-            else {
-        // 链表迁移开始 -- 重点
-        Node<K,V> loHead = null, loTail = null;
-        Node<K,V> hiHead = null, hiTail = null;
-Node<K,V> next;
-                do {
-next = e.next;
-// 与旧容量进行按位与计算，如果=0是低位，放在原位置不动
-// e.hash & oldCap的结果只能【0和oldCap的值】
-                    if ((e.hash & oldCap) == 0) {
-        if (loTail == null)
-// 为空说明是首次
-loHead = e;
-                        else
-// 不是首个元素，尾插
-loTail.next = e;
-loTail = e;
-                    }
-                            // 高位
-                            else {
+            Node<K, V> e;
+            // 如果元素不为空
+            if ((e = oldTab[j]) != null) {
+                // 清空旧数组当前位置的引用，帮助 GC 回收旧数组中的节点引用关系
+                oldTab[j] = null;
+                // 如果没有下一个节点，说明就一个元素，直接放入新数组
+                if (e.next == null)
+                    // 计算当前元素在新数组的位置
+                    newTab[e.hash & (newCap - 1)] = e;
+                // next不为空，判断是否为树，走树的迁移方式
+                // 树节点也会按高低位拆分，只是 TreeNode.split 内部还会处理树化/退化逻辑
+                else if (e instanceof TreeNode)
+                    ((TreeNode<K, V>) e).split(this, newTab, j, oldCap);
+                else {
+                    // 链表迁移开始 -- 重点
+                    Node<K, V> loHead = null, loTail = null;
+                    Node<K, V> hiHead = null, hiTail = null;
+                    Node<K, V> next;
+                    do {
+                        next = e.next;
+                        // 与旧容量进行按位与计算，如果=0是低位，放在原位置不动
+                        // e.hash & oldCap的结果只能【0和oldCap的值】
+                        if ((e.hash & oldCap) == 0) {
+                            if (loTail == null)
+                                // 为空说明是首次
+                                loHead = e;
+                            else
+                                // 不是首个元素，尾插
+                                loTail.next = e;
+                            loTail = e;
+                        }
+                        // 高位
+                        else {
                             if (hiTail == null)
-// 为空说明是首次
-hiHead = e;
-                        else
-// 不是首个元素，尾插
-hiTail.next = e;
-hiTail = e;
+                                // 为空说明是首次
+                                hiHead = e;
+                            else
+                                // 不是首个元素，尾插
+                                hiTail.next = e;
+                            hiTail = e;
+                        }
+                    } while ((e = next) != null);
+                    // 遍历结束，链表根据高低位，拆分为两条链表
+                    if (loTail != null) {
+                        // 低位链表的最后一个元素置为空
+                        loTail.next = null;
+                        // 低位直接放在新数组[旧数组下标]，就是扩容后位置不变
+                        newTab[j] = loHead;
                     }
-                            } while ((e = next) != null);
-        // 遍历结束，链表根据高低位，拆分为两条链表
-        if (loTail != null) {
-// 低位链表的最后一个元素置为空
-loTail.next = null;
-// 低位直接放在新数组[旧数组下标]，就是扩容后位置不变
-newTab[j] = loHead;
+                    if (hiTail != null) {
+                        // 高位链表的最后一个元素置为空
+                        hiTail.next = null;
+                        // 高位直接放在新数组[旧数组下标 + 旧数组的容量]
+                        newTab[j + oldCap] = hiHead;
+                    }
                 }
-                        if (hiTail != null) {
-// 高位链表的最后一个元素置为空
-hiTail.next = null;
-// 高位直接放在新数组[旧数组下标 + 旧数组的容量]
-newTab[j + oldCap] = hiHead;
-                }
-                        }
-                        }
-                        }
-                        }
+            }
+        }
+    }
+}
 ```
 
 举例详解：
@@ -351,26 +351,26 @@ newTable[19] -> 19 -> 51
 因为HashMap不是从头到尾遍历元素，而是计算hash值，然后通过hash值找到具体的桶位置，所以它的平均时间复杂度是O(1)。举例：假设你有10000个元素，存放在map中和存放在list中
 
 ```java
-class User {
-    private Long userId;
-    private String userName;
-}
+    class User {
+        private Long userId;
+        private String userName;
+    }
 
-// 找到id = 123的用户
-Long userId = 123L;
-// map获取（假设已经存入）
-Map<Long, User> userMap = new HashMap<>();
-// 平均复杂度O(1)
-userMap.get(userId);
-
-// list遍历
-List<User> userList = new ArrayList<>();
-// 只能循环单个遍历，时间复杂度是O(n)
-for(User user : userList) {
+    // 找到id = 123的用户
+    Long userId = 123L;
+    // map获取（假设已经存入）
+    Map<Long, User> userMap = new HashMap<>();
+    // 平均复杂度O(1)
+    userMap.get(userId);
+    
+    // list遍历
+    List<User> userList = new ArrayList<>();
+    // 只能循环单个遍历，时间复杂度是O(n)
+    for(User user : userList) {
         if(userId.equals(user.getUserId())) {
         return user;
     }
-            }
+
 
 ```
 
