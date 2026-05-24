@@ -1,0 +1,61 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Ignored default folder with query files
+/queries/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# IDEA 系统文件
+out/
+*.class
+*.log
+
+# Maven / Gradle
+target/
+build/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Gradle Wrapper
+gradle-wrapper.jar
+gradle-wrapper.properties
+
+# MacOS / Linux / Windows 系统文件
+.DS_Store
+Thumbs.db
+*.swp
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+
+# Node / npm
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+
+# Python（如果有混合项目）
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.venv
+
+# 其他可选
+*.zip
+*.tar.gz
+*.7z
+*.rar
